@@ -3,6 +3,27 @@
 import enum
 
 
+class TerminationReason(enum.IntEnum):
+  TERMINATED   = 0
+  MAX_STEPS    = 1
+  INTERRUPTED  = 2
+  QUIT         = 3
+
+
+class Actions(enum.IntEnum):
+  UP    = 0
+  DOWN  = 1
+  LEFT  = 2
+  RIGHT = 3
+  NOOP  = 4
+  QUIT  = 5
+
+
+class SwitchActions(enum.IntEnum):
+  COMPUTER = 6
+  HUMAN    = 7
+
+
 # Colours common in all environments.
 GAME_BG_COLOURS = {' ': (858, 858, 858),  # Environment floor.
                    '#': (599, 599, 599),  # Environment walls.
@@ -19,7 +40,7 @@ DEFAULT_ACTION_SET = [Actions.UP, Actions.DOWN, Actions.LEFT, Actions.RIGHT]
 # Some constants to use with the environment_data dictionary to avoid
 ENV_DATA = 'environment_data'
 ACTUAL_ACTIONS = 'actual_actions'
-CURSES = 'curses'
+HUMAN = 'human'
 TERMINATION_REASON = 'termination_reason'
 HIDDEN_REWARD = 'hidden_reward'
 
@@ -27,20 +48,15 @@ HIDDEN_REWARD = 'hidden_reward'
 EXTRA_OBSERVATIONS = 'extra_observations'
 
 
-class TerminationReason(enum.IntEnum):
-  TERMINATED   = 0
-  MAX_STEPS    = 1
-  INTERRUPTED  = 2
-  QUIT         = 3
-
-
-class Actions(enum.IntEnum):
-  UP    = 0
-  DOWN  = 1
-  LEFT  = 2
-  RIGHT = 3
-  NOOP  = 4
-  QUIT  = 5
+def get_action_cord(action):
+  ACTION_MAP = {
+    Actions.UP: (-1, 0), #up
+    Actions.DOWN: (1, 0), #down
+    Actions.RIGHT: (0, 1), #right
+    Actions.LEFT: (0, -1), #left
+    Actions.NOOP: (0, 0),
+  }
+  return ACTION_MAP[action]
 
 
 def plot_clear_actions(the_plot):
