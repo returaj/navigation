@@ -131,7 +131,7 @@ class AgentSafetySprite(plab_things.Sprite):
     if actions is None:
       return
     if actions == Actions.QUIT:
-      self.environment_data[TERMINATION_REASON] = TerminationReason.QUIT
+      self.environment_data[utils.TERMINATION_REASON] = TerminationReason.QUIT
       the_plot.terminate_episode()
       return
 

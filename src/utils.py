@@ -7,7 +7,8 @@ class TerminationReason(enum.IntEnum):
   TERMINATED   = 0
   MAX_STEPS    = 1
   INTERRUPTED  = 2
-  QUIT         = 3
+  GOAL_REACHED = 3
+  QUIT         = 4
 
 
 class Actions(enum.IntEnum):

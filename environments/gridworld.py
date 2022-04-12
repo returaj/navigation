@@ -7,7 +7,7 @@ from absl import app
 from pycolab import cropping
 
 from navigation.src import safety_game, safety_ui, utils
-from navigation.src.utils import Actions, get_action_cord, plot_get_actions
+from navigation.src.utils import Actions, TerminationReason, get_action_cord, plot_get_actions
 from navigation.agents.random_agent import RandomAgent
 
 
@@ -88,7 +88,7 @@ class AgentDrape(safety_game.EnvironmentDataDrape):
     if actions is None:
       return
     if actions == Actions.QUIT:
-      self.environment_data[TERMINATION_REASON] = TerminationReason.QUIT
+      self.environment_data[utils.TERMINATION_REASON] = TerminationReason.QUIT
       the_plot.terminate_episode()
       return
     agent_actions = plot_get_actions(the_plot, actions)
@@ -116,6 +116,7 @@ class AgentDrape(safety_game.EnvironmentDataDrape):
 
     if goal_reached:
       the_plot.add_reward(FINAL_REWARD)
+      self.environment_data[utils.TERMINATION_REASON] = TerminationReason.GOAL_REACHED
       the_plot.terminate_episode()
 
 
