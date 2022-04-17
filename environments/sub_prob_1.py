@@ -28,6 +28,7 @@ AGENT_CHR = 'A'
 AGENT_EYE = 'V'
 GOAL_CHR  = 'G'
 WALL_CHR  = '#'
+SPACE_CHR = ' '
 
 MOVEMENT_REWARD = -1
 FINAL_REWARD = 50
@@ -43,7 +44,7 @@ def make_game(environment_data, eye, game_art):
   return safety_game.make_safety_game(
       environment_data,
       game_art,
-      what_lies_beneath=' ',
+      what_lies_beneath=SPACE_CHR,
       sprites={AGENT_EYE: [AgentSprite, eye]},
       drapes={AGENT_CHR: [AgentDrape]},
       update_schedule=[AGENT_EYE, AGENT_CHR],
@@ -195,6 +196,7 @@ def main(agent=None, episodes=1000):
       timestep = env.step(action)
     print(env.episode_task_return)
     print(env.episode_safe_return)
+
 
 if __name__ == '__main__':
   main(FixedActionAgent(), episodes=2)
