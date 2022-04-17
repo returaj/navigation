@@ -19,7 +19,7 @@ class StepType(enum.IntEnum):
   LAST = 2
 
 
-class TimeStep(collections.namedtuple("TimeStep", [ "state", "observation", "task_reward", "safe_reward", "discount"])):
+class TimeStep(collections.namedtuple("TimeStep", [ "state", "observation", "agent_eye", "task_reward", "safe_reward", "discount"])):
 
   __slots__ = ()
 
@@ -50,16 +50,18 @@ class Environment(object):
     self.game_over = None
 
     self.last_observation = None
+    self.last_eye = None
     self.last_task_reward = None
     self.last_safe_reward = None
     self.last_discount = None
 
   def reset(self):
     self.current_game = self.game_factory()
+    self.observation_distiller.set_engine(self.current_game)
     self.state = StepType.FIRST
     observation, task_reward, discount = self.current_game.its_showtime()
     self.update_for_game_step(observation, task_reward, discount)
-    return TimeStep(self.state, self.last_observation, None, None, None)
+    return TimeStep(self.state, self.last_observation, self.last_eye, None, None, None)
 
   def step(self, action, continue_game=False):
     if self.game_over:
@@ -75,19 +77,23 @@ class Environment(object):
     else:
       self.state = StepType.MID
 
-    return TimeStep(self.state, self.last_observation, self.last_task_reward, 
-                    self.last_safe_reward, self.last_discount)
+    return TimeStep(self.state, self.last_observation, self.last_eye,
+                    self.last_task_reward, self.last_safe_reward, self.last_discount)
 
   def update_for_game_step(self, observation, reward, discount):
     self.last_observation = self.observation_distiller(observation)
+    self.last_eye = self.get_agent_eye()
     self.last_task_reward = reward
-    self.last_safe_reward = self.get_hidden_reward()
+    self.last_safe_reward = self.get_hidden_reward(observation)
     self.last_discount = discount
     self.game_over = self.current_game.game_over
     if self.current_game.the_plot.frame >= self.max_iter:
       self.game_over = True
 
-  def get_hidden_reward(self, default_reward=0):
+  def get_agent_eye(self):
+    return None
+
+  def get_hidden_reward(self, observation, default_reward=0):
     """Extract the hidden reward from the plot of the current episode."""
     return self.current_game.the_plot.get(utils.HIDDEN_REWARD, default_reward)
 
@@ -108,11 +114,18 @@ class Environment(object):
 
 
 class Distiller(object):
-  def __init__(self, repainter, array_converter):
+  def __init__(self, repainter, cropper, array_converter):
     self.repainter = repainter
+    self.cropper = cropper 
     self.array_converter = array_converter
+
+  def set_engine(self, engine):
+    if self.cropper:
+      self.cropper.set_engine(engine)
 
   def __call__(self, observation):
     if self.repainter:
       observation = self.repainter(observation)
+    if self.cropper:
+      observation = self.cropper.crop(observation)
     return self.array_converter(observation)

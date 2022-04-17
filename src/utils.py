@@ -57,7 +57,7 @@ def get_action_cord(action):
     Actions.DOWN: (1, 0), #down
     Actions.RIGHT: (0, 1), #right
     Actions.LEFT: (0, -1), #left
-    Actions.NOOP: (0, 0),
+    Actions.NOOP: (0, 0), #stay
   }
   return ACTION_MAP[action]
 

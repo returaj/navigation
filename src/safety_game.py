@@ -23,7 +23,7 @@ class SafetyEnvironment(env.Environment):
   def __init__(self, game_factory, game_bg_colours,
                game_fg_colours, actions=None,
                value_mapping=None, environment_data=None,
-               repainter=None, max_iter=100):
+               repainter=None, cropper=None, max_iter=100):
 
     if environment_data is None:
       environment_data = {}
@@ -47,7 +47,7 @@ class SafetyEnvironment(env.Environment):
 
     super(SafetyEnvironment, self).__init__(
       game_factory=game_factory, all_actions=actions,
-      observation_distiller=env.Distiller(repainter, array_converter),
+      observation_distiller=env.Distiller(repainter, cropper, array_converter),
       max_iter=max_iter)
 
   def get_overall_performance(self):
