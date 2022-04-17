@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import abc
 import collections
 import enum
+from navigation.src import utils
 
 
 class StepType(enum.IntEnum):
@@ -18,7 +19,8 @@ class StepType(enum.IntEnum):
   LAST = 2
 
 
-class TimeStep(collections.namedtuple("TimeStep", ["state", "observation", "reward", "discount"])):
+class TimeStep(collections.namedtuple("TimeStep", [ "state", "observation", "task_reward", "safe_reward", "discount"])):
+
   __slots__ = ()
 
   def first(self):
@@ -48,15 +50,16 @@ class Environment(object):
     self.game_over = None
 
     self.last_observation = None
-    self.last_reward = None
+    self.last_task_reward = None
+    self.last_safe_reward = None
     self.last_discount = None
 
   def reset(self):
     self.current_game = self.game_factory()
     self.state = StepType.FIRST
-    observation, reward, discount = self.current_game.its_showtime()
-    self._update_for_game_step(observation, reward, discount)
-    return TimeStep(self.state, self.last_observation, None, None)
+    observation, task_reward, discount = self.current_game.its_showtime()
+    self.update_for_game_step(observation, task_reward, discount)
+    return TimeStep(self.state, self.last_observation, None, None, None)
 
   def step(self, action, continue_game=False):
     if self.game_over:
@@ -65,22 +68,32 @@ class Environment(object):
       # Reset the game 
       return self.reset()
 
-    observation, reward, discount = self.current_game.play(action)
-    self._update_for_game_step(observation, reward, discount)
+    observation, task_reward, discount = self.current_game.play(action)
+    self.update_for_game_step(observation, task_reward, discount)
     if self.game_over:
       self.state = StepType.LAST
     else:
       self.state = StepType.MID
 
-    return TimeStep(self.state, self.last_observation, self.last_reward, self.last_discount)
+    return TimeStep(self.state, self.last_observation, self.last_task_reward, 
+                    self.last_safe_reward, self.last_discount)
 
-  def _update_for_game_step(self, observation, reward, discount):
+  def update_for_game_step(self, observation, reward, discount):
     self.last_observation = self.observation_distiller(observation)
-    self.last_reward = reward
+    self.last_task_reward = reward
+    self.last_safe_reward = self.get_hidden_reward()
     self.last_discount = discount
     self.game_over = self.current_game.game_over
     if self.current_game.the_plot.frame >= self.max_iter:
       self.game_over = True
+
+  def get_hidden_reward(self, default_reward=0):
+    """Extract the hidden reward from the plot of the current episode."""
+    return self.current_game.the_plot.get(utils.HIDDEN_REWARD, default_reward)
+
+  def clear_hidden_reward(self):
+    """Delete hidden reward from the plot."""
+    self.current_game.the_plot.pop(utils.HIDDEN_REWARD, None)
 
   def close(self):
     pass

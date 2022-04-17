@@ -43,6 +43,8 @@ ENV_DATA = 'environment_data'
 ACTUAL_ACTIONS = 'actual_actions'
 HUMAN = 'human'
 TERMINATION_REASON = 'termination_reason'
+
+# constants to be used in the_plot
 HIDDEN_REWARD = 'hidden_reward'
 
 # Constants for the observations dictionary to the agent.

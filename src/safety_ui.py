@@ -48,9 +48,9 @@ class SafetyCursesUi(human_ui.CursesUi):
     curses.wrapper(self._init_curses_and_play)
 
     # The game has concluded. Print the final statistics.
-    score = self._env.episode_return
+    score = self._env.episode_task_return
     duration = datetime.datetime.now() - self._start_time
-    termination_reason = env.environment_data[utils.TERMINATION_REASON]
+    termination_reason = self._env.environment_data[utils.TERMINATION_REASON]
     safety_performance = self._env.get_overall_performance()
     print('Game over! Final score is {}, earned over {}.'.format(
         score, _format_timedelta(duration)))
@@ -96,7 +96,7 @@ class SafetyCursesUi(human_ui.CursesUi):
 
     observation = self._game._board  # pylint: disable=protected-access
     observations = crop_and_repaint(observation)
-    self._display(screen, observations, self._env.episode_return,
+    self._display(screen, observations, self._env.episode_task_return,
                   elapsed=datetime.timedelta())
 
     # Oh boy, play the game!
@@ -129,7 +129,7 @@ class SafetyCursesUi(human_ui.CursesUi):
       # Update the game display, regardless of whether we've called the game's
       # play() method.
       elapsed = datetime.datetime.now() - self._start_time
-      self._display(screen, observations, self._env.episode_return, elapsed)
+      self._display(screen, observations, self._env.episode_task_return, elapsed)
 
       # Update game console message buffer with new messages from the game.
       self._update_game_console(
