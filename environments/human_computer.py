@@ -16,7 +16,7 @@ def main(unused_argv):
   env = GridWorld(wall_chr=WALL_CHR, agent_chr=AGENT_CHR, eye_chr=AGENT_EYE,
                   eye_pos=(2,4), value_mapping=value_mapping, cropper=cropper)
   ui = safety_ui.make_ui(GAME_BG_COLOURS, GAME_FG_COLOURS, croppers=[cropper])
-  ui.play(env, ValueDecompositionAgent())
+  ui.play(env, ValueDecompositionAgent(env))
 
 
 if __name__ == '__main__':

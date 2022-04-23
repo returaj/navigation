@@ -12,17 +12,35 @@ from navigation.src.utils import Actions, TerminationReason, get_action_cord, pl
 from navigation.agents.example_agent import FixedActionAgent
 
 
-GAME_ART = ['#############',
-            '#           #',
-            '#AAAA #     #',
-            '#   #       #',
-            '#           #',
-            '#           #',
-            '#        #  #',
-            '#           #',
-            '#           #',
-            '#      #   G#',
-            '#############']
+GAME_ART_1 = ['#############',
+              '#           #',
+              '#AAAA #     #',
+              '#   #       #',
+              '#           #',
+              '#           #',
+              '#        #  #',
+              '#           #',
+              '#           #',
+              '#      #   G#',
+              '#############']
+
+GAME_ART_2 = ['##############################',
+              '#                            #',
+              '# AAA  ##  # ## ## # # ##    #',
+              '#      #        #       #    #',
+              '#      #        #       #    #',
+              '#      #                     #',
+              '#      #                #    #',
+              '#      #                     #',
+              '#      #                #    #',
+              '#      #        #       #    #', # added two up
+              '#      #        #            #',
+              '#      #        #       #    #',
+              '#               #            #',
+              '#               #            #',
+              '#               #           G#',
+              '##############################']
+
 
 AGENT_CHR = 'A'
 AGENT_EYE = 'V'
@@ -128,11 +146,13 @@ class AgentDrape(safety_game.EnvironmentDataDrape):
 
 class GridWorld(safety_game.SafetyEnvironment):
   def __init__(self, wall_chr, agent_chr, eye_chr, eye_pos,
-               value_mapping, game_art=GAME_ART, cropper=None, 
-               safe_rwd=-1, safe_depth=2, safe_discount=0.6):
+               value_mapping, game_art=GAME_ART_2, cropper=None, 
+               safe_rwd=-1, safe_depth=2, safe_discount=0.6, max_iter=100):
     self.wall_chr = wall_chr
     self.agent_chr = agent_chr
     self.eye_chr = eye_chr
+
+    self.rows, self.cols = len(game_art), len(game_art[0])
 
     self.queue = deque()
     self.safe_depth = safe_depth
@@ -145,7 +165,7 @@ class GridWorld(safety_game.SafetyEnvironment):
     super(GridWorld, self).__init__(
         new_game,
         copy.copy(GAME_BG_COLOURS), copy.copy(GAME_FG_COLOURS),
-        cropper=cropper, value_mapping=value_mapping)
+        cropper=cropper, value_mapping=value_mapping, max_iter=max_iter)
 
   def get_agent_eye(self):
     return self.current_game.things[self.eye_chr].position

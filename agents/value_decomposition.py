@@ -36,9 +36,9 @@ class ReplayBuffer(object):
 
 
 class ValueDecomposition(object):
-  def __init__(self, env, num_states, buffer_size, gamma=1.0, beta=0.4, temp=5.0, temp_decay=0.99, alpha=0.01):
+  def __init__(self, env, buffer_size, beta=0.4, temp=5.0, temp_decay=0.99, alpha=0.01, gamma=1.0):
     self.env = env
-    self.num_states = num_states
+    self.num_states = env.rows * env.cols
     self.actions = env.all_actions
     self.num_actions = len(self.actions)
     self.buffer = ReplayBuffer(buffer_size)
@@ -50,21 +50,27 @@ class ValueDecomposition(object):
 
   def encode(self, timestep):
     pos = timestep.agent_eye
-    r, c = self.env.current_game.rows, self.env.current_game.cols
+    r, c = self.env.rows, self.env.cols
     return pos.row*c + pos.col
 
-  def softmax(self, ts, tq, sq, temp):
+  def softmax(self, ts, qvalue, temp):
     state = self.encode(ts)
-    qval = (self.beta*tq[state] + (1-self.beta)*sq[state]) / temp
+    qval = qvalue[state] / temp
     tmp_prob = np.exp(qval - np.max(qval))
     prob = tmp_prob / np.sum(tmp_prob)
+    return prob
+
+  def get_action(self, ts, tq, sq, temp):
+    prob_t = self.softmax(ts, tq, temp)
+    prob_s = self.softmax(ts, sq, temp)
+    prob = self.beta * prob_t + (1-self.beta) * prob_s
     return np.random.choice(self.actions, p=prob)
 
   def add_to_buffer(self, timestep, action, next_timestep):
-    state       = self.encode(timestep.agent_eye)
+    state       = self.encode(timestep)
     task_reward = next_timestep.task_reward
     safe_reward = next_timestep.safe_reward
-    next_state  = self.encode(next_timestep.agent_eye)
+    next_state  = self.encode(next_timestep)
     done        = next_timestep.last()
     self.buffer.add(state, action, task_reward, safe_reward, next_state, done)
 
@@ -90,7 +96,7 @@ class ValueDecomposition(object):
       trwd, srwd = 0, 0
       temp = max(0.1, temp*self.temp_decay)
       while not timestep.last():
-        action = self.softmax(timestep, tq, sq, temp)
+        action = self.get_action(timestep, tq, sq, temp)
         next_timestep = env.step(action)
         self.add_to_buffer(timestep, action, next_timestep)
         self.update_q(tq, sq, batch_size)
@@ -99,6 +105,7 @@ class ValueDecomposition(object):
         timestep = next_timestep
       task_episodes[episode] = trwd
       safe_episodes[episode] = srwd
+      # print(env.episode_task_return)
     return tq, sq, task_episodes, safe_episodes
 
   def avg_run(self, runs=10, episodes=100):
@@ -130,10 +137,10 @@ class ValueDecomposition(object):
 
 if __name__ == '__main__':
   value_mapping = {SPACE_CHR: 0.0, WALL_CHR: 1.0, AGENT_EYE: 2.0, AGENT_CHR: 3.0, GOAL_CHR: 4.0}
-  env = GridWorld(WALL_CHR, AGENT_CHR, AGENT_EYE, (2,4), value_mapping)
-  runner = ValueDecomposition(env, 11*13, int(1e3), beta=0.4)
+  env = GridWorld(WALL_CHR, AGENT_CHR, AGENT_EYE, (2,4), value_mapping, max_iter=700)
+  runner = ValueDecomposition(env, int(1e3), beta=0.4, temp=5.0, temp_decay=0.99, alpha=0.01) # beta=0.4(safe), beta=1.0(greedy)
   # save avg reward plot
-  avg_tq, avg_sq, avg_task, avg_safe = runner.avg_run()
+  avg_tq, avg_sq, avg_task, avg_safe = runner.avg_run(episodes=1_000, runs=1)
   runner.save_q_values(avg_tq, avg_sq)
   runner.plot(avg_task, "task_reward")
   runner.plot(avg_safe, "safe_reward")
